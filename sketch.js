@@ -55,7 +55,7 @@ function draw() {
   textSize(24);
   text("414730159彭宥蓁", width / 2, 30);
   textSize(18);
-  text("影像辨識_耳環臉譜", width / 2, 80);
+  text("影像辨識/耳環臉譜", width / 2, 80);
 
   // 5. 計算影像顯示寬高 (畫布寬高的 50%)
   let w = width * 0.5;
