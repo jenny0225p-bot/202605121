@@ -1,11 +1,24 @@
 let faceMesh;
+let handPose;
 let video;
 let faces = [];
+let hands = [];
 let options = { maxFaces: 1, refineLandmarks: false, flipHorizontal: false };
+let earringImgs = [];
+let currentEarringIndex = 0; // 預設顯示第一款
 
 function preload() {
   // 初始化 ml5 faceMesh 模型
   faceMesh = ml5.faceMesh(options);
+  // 初始化 ml5 handPose 模型
+  handPose = ml5.handPose(options);
+  
+  // 載入五款耳環圖片
+  earringImgs[0] = loadImage('pic/acc/acc1_ring.png');
+  earringImgs[1] = loadImage('pic/acc/acc2_pearl.png');
+  earringImgs[2] = loadImage('pic/acc/acc3_tassel.png');
+  earringImgs[3] = loadImage('pic/acc/acc4_jade.png');
+  earringImgs[4] = loadImage('pic/acc/acc5_phoenix.png');
 }
 
 function setup() {
@@ -19,10 +32,16 @@ function setup() {
 
   // 開始臉部辨識偵測
   faceMesh.detectStart(video, gotFaces);
+  // 開始手勢辨識偵測
+  handPose.detectStart(video, gotHands);
 }
 
 function gotFaces(results) {
   faces = results;
+}
+
+function gotHands(results) {
+  hands = results;
 }
 
 function draw() {
@@ -50,14 +69,32 @@ function draw() {
   scale(-1, 1);        // 水平翻轉
   image(video, 0, 0, w, h);
 
+  // 7. 辨識手勢並更新目前要顯示的耳環索引
+  if (hands.length > 0) {
+    let hand = hands[0];
+    let count = 0;
+    
+    // 簡單判斷手指是否伸直 (指尖 Y 座標小於第二指節)
+    // 食指 (8 vs 6), 中指 (12 vs 10), 無名指 (16 vs 14), 小指 (20 vs 18)
+    if (hand.keypoints[8].y < hand.keypoints[6].y) count++;
+    if (hand.keypoints[12].y < hand.keypoints[10].y) count++;
+    if (hand.keypoints[16].y < hand.keypoints[14].y) count++;
+    if (hand.keypoints[20].y < hand.keypoints[18].y) count++;
+    // 拇指判斷 (檢查水平距離)
+    if (abs(hand.keypoints[4].x - hand.keypoints[2].x) > 30) count++;
+
+    // 如果手指數量在 1~5 之間，更新索引
+    if (count >= 1 && count <= 5) {
+      currentEarringIndex = count - 1;
+    }
+  }
+
   // 7. 辨識耳垂並畫出黃色圓圈耳環
   if (faces.length > 0) {
     let face = faces[0];
-    // 使用更穩定的耳垂位置索引：215(右), 435(左)
-    let earPoints = [face.keypoints[215], face.keypoints[435]];
-    
-    fill(255, 255, 0); // 黃色
-    noStroke();
+    // 使用更準確的耳垂底部索引點：172(右), 397(左)
+    let earPoints = [face.keypoints[172], face.keypoints[397]];
+    let earringImg = earringImgs[currentEarringIndex];
     
     for (let pt of earPoints) {
       if (pt) {
@@ -65,13 +102,21 @@ function draw() {
         let px = map(pt.x, 0, video.width, 0, w);
         let py = map(pt.y, 0, video.height, 0, h);
         
-        // 根據影像高度動態計算耳環間距與大小，避免比例失真
-        let spacing = h * 0.04; 
-        let diameter = h * 0.02;
+        // 根據影像寬度動態調整耳環大小 (例如設定為影像寬度的 8%)
+        let imgW = w * 0.08;
+        let imgH = imgW * (earringImg.height / earringImg.width);
 
-        for (let i = 1; i <= 3; i++) {
-          circle(px, py + (i * spacing), diameter);
-        }
+        // 設定位移比率 (例如圖片寬高的 15%)
+        let offsetX = imgW * 0.15;
+        let offsetY = imgH * 0.15;
+        
+        // 判斷左右耳，調整「往外」的方向
+        // 172 是右耳(畫面左側)，往外是減；397 是左耳(畫面右側)，往外是加
+        let xPos = (pt === face.keypoints[172]) ? (px - imgW/2 - offsetX) : (px - imgW/2 + offsetX);
+        let yPos = py - offsetY; // 向上移動
+        
+        // 繪製耳環圖片
+        image(earringImg, xPos, yPos, imgW, imgH);
       }
     }
   }
