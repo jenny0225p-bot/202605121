@@ -76,14 +76,16 @@ function draw() {
     
     // 簡單判斷手指是否伸直 (指尖 Y 座標小於第二指節)
     // 食指 (8 vs 6), 中指 (12 vs 10), 無名指 (16 vs 14), 小指 (20 vs 18)
-    // 注意：因為影像水平翻轉，座標判斷依然適用
     if (hand.keypoints[8] && hand.keypoints[8].y < hand.keypoints[6].y) count++;
     if (hand.keypoints[12] && hand.keypoints[12].y < hand.keypoints[10].y) count++;
     if (hand.keypoints[16] && hand.keypoints[16].y < hand.keypoints[14].y) count++;
     if (hand.keypoints[20] && hand.keypoints[20].y < hand.keypoints[18].y) count++;
     
-    // 拇指判斷 (檢查拇指尖與食指根部的距離，避免誤判)
-    if (hand.keypoints[4] && hand.keypoints[2] && abs(hand.keypoints[4].x - hand.keypoints[2].x) > 30) count++;
+    // 拇指判斷 (檢查水平距離)
+    if (hand.keypoints[4] && hand.keypoints[2]) {
+      let thumbDist = dist(hand.keypoints[4].x, hand.keypoints[4].y, hand.keypoints[2].x, hand.keypoints[2].y);
+      if (thumbDist > 40) count++; // 使用距離判斷較穩定
+    }
 
     // 如果手指數量在 1~5 之間，更新索引
     if (count >= 1 && count <= 5) {
@@ -96,8 +98,11 @@ function draw() {
     let face = faces[0];
     // 使用更準確的耳垂底部索引點：172(右), 397(左)
     let earPoints = [face.keypoints[172], face.keypoints[397]];
-    let earringImg = earringImgs[currentEarringIndex];
     
+    // 確保索引不超出陣列範圍
+    let earringImg = earringImgs[currentEarringIndex];
+    if (!earringImg) return; 
+
     for (let pt of earPoints) {
       if (pt) {
         // 使用 video.width/height 確保映射精確
