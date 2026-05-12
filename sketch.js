@@ -5,7 +5,7 @@ let faces = [];
 let hands = [];
 let options = { maxFaces: 1, refineLandmarks: false, flipHorizontal: false };
 let earringImgs = [];
-let currentEarringIndex = 0; // 預設顯示第一款
+let currentEarringIndex = 1; // 預設顯示第一款
 
 function preload() {
   // 初始化 ml5 faceMesh 模型
@@ -14,11 +14,11 @@ function preload() {
   handPose = ml5.handPose(options);
   
   // 載入五款耳環圖片
-  earringImgs[0] = loadImage('pic/acc1_ring.png');
-  earringImgs[1] = loadImage('pic/acc2_pearl.png');
-  earringImgs[2] = loadImage('pic/acc3_tassel.png');
-  earringImgs[3] = loadImage('pic/acc4_jade.png');
-  earringImgs[4] = loadImage('pic/acc5_phoenix.png');
+  earringImgs[1] = loadImage('pic/acc1_ring.png');
+  earringImgs[2] = loadImage('pic/acc2_pearl.png');
+  earringImgs[3] = loadImage('pic/acc3_tassel.png');
+  earringImgs[4] = loadImage('pic/acc4_jade.png');
+  earringImgs[5] = loadImage('pic/acc5_phoenix.png');
 }
 
 function setup() {
@@ -46,16 +46,16 @@ function gotHands(results) {
 
 function draw() {
   // 3. 設定畫布背景顏色為 e7c6ff
-  background('#e7c6ff');
+  background('#c6dcffff');
 
   // 4. 置中上方顯示文字
   fill(0);
   noStroke();
   textAlign(CENTER, TOP);
-  textSize(32);
-  text("414730217羅紫芸", width / 2, 30);
   textSize(24);
-  text("作品為影像辨識_耳環臉譜", width / 2, 80);
+  text("414730977楊心ㄩˊ", width / 2, 30);
+  textSize(18);
+  text("影像辨識_耳環臉譜", width / 2, 80);
 
   // 5. 計算影像顯示寬高 (畫布寬高的 50%)
   let w = width * 0.5;
@@ -81,15 +81,17 @@ function draw() {
     if (hand.keypoints[16] && hand.keypoints[16].y < hand.keypoints[14].y) count++;
     if (hand.keypoints[20] && hand.keypoints[20].y < hand.keypoints[18].y) count++;
     
-    // 拇指判斷 (檢查水平距離)
-    if (hand.keypoints[4] && hand.keypoints[2]) {
-      let thumbDist = dist(hand.keypoints[4].x, hand.keypoints[4].y, hand.keypoints[2].x, hand.keypoints[2].y);
-      if (thumbDist > 40) count++; // 使用距離判斷較穩定
+    // 針對短拇指優化的判斷：
+    // 比較「拇指尖(4)到小指根部(17)」的距離與「食指根部(5)到小指根部(17)」的基準距離
+    if (hand.keypoints[4] && hand.keypoints[5] && hand.keypoints[17]) {
+      let d1 = dist(hand.keypoints[4].x, hand.keypoints[4].y, hand.keypoints[17].x, hand.keypoints[17].y);
+      let d2 = dist(hand.keypoints[5].x, hand.keypoints[5].y, hand.keypoints[17].x, hand.keypoints[17].y);
+      if (d1 > d2) count++; 
     }
 
-    // 如果手指數量在 1~5 之間，更新索引
+    // 更新索引：確保 1隻手指=圖片1，5隻手指=圖片5
     if (count >= 1 && count <= 5) {
-      currentEarringIndex = count - 1;
+      currentEarringIndex = count;
     }
   }
 
