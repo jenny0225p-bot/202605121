@@ -14,11 +14,11 @@ function preload() {
   handPose = ml5.handPose(options);
   
   // 載入五款耳環圖片
-  earringImgs[0] = loadImage('pic/acc/acc1_ring.png');
-  earringImgs[1] = loadImage('pic/acc/acc2_pearl.png');
-  earringImgs[2] = loadImage('pic/acc/acc3_tassel.png');
-  earringImgs[3] = loadImage('pic/acc/acc4_jade.png');
-  earringImgs[4] = loadImage('pic/acc/acc5_phoenix.png');
+  earringImgs[0] = loadImage('pic/acc1_ring.png');
+  earringImgs[1] = loadImage('pic/acc2_pearl.png');
+  earringImgs[2] = loadImage('pic/acc3_tassel.png');
+  earringImgs[3] = loadImage('pic/acc4_jade.png');
+  earringImgs[4] = loadImage('pic/acc5_phoenix.png');
 }
 
 function setup() {
@@ -76,12 +76,14 @@ function draw() {
     
     // 簡單判斷手指是否伸直 (指尖 Y 座標小於第二指節)
     // 食指 (8 vs 6), 中指 (12 vs 10), 無名指 (16 vs 14), 小指 (20 vs 18)
-    if (hand.keypoints[8].y < hand.keypoints[6].y) count++;
-    if (hand.keypoints[12].y < hand.keypoints[10].y) count++;
-    if (hand.keypoints[16].y < hand.keypoints[14].y) count++;
-    if (hand.keypoints[20].y < hand.keypoints[18].y) count++;
-    // 拇指判斷 (檢查水平距離)
-    if (abs(hand.keypoints[4].x - hand.keypoints[2].x) > 30) count++;
+    // 注意：因為影像水平翻轉，座標判斷依然適用
+    if (hand.keypoints[8] && hand.keypoints[8].y < hand.keypoints[6].y) count++;
+    if (hand.keypoints[12] && hand.keypoints[12].y < hand.keypoints[10].y) count++;
+    if (hand.keypoints[16] && hand.keypoints[16].y < hand.keypoints[14].y) count++;
+    if (hand.keypoints[20] && hand.keypoints[20].y < hand.keypoints[18].y) count++;
+    
+    // 拇指判斷 (檢查拇指尖與食指根部的距離，避免誤判)
+    if (hand.keypoints[4] && hand.keypoints[2] && abs(hand.keypoints[4].x - hand.keypoints[2].x) > 30) count++;
 
     // 如果手指數量在 1~5 之間，更新索引
     if (count >= 1 && count <= 5) {
@@ -102,13 +104,13 @@ function draw() {
         let px = map(pt.x, 0, video.width, 0, w);
         let py = map(pt.y, 0, video.height, 0, h);
         
-        // 根據影像寬度動態調整耳環大小 (例如設定為影像寬度的 8%)
-        let imgW = w * 0.08;
+        // 根據影像寬度動態調整耳環大小
+        let imgW = w * 0.1; // 稍微放大一點點
         let imgH = imgW * (earringImg.height / earringImg.width);
 
-        // 設定位移比率 (例如圖片寬高的 15%)
-        let offsetX = imgW * 0.15;
-        let offsetY = imgH * 0.15;
+        // 設定位移比率 (使用圖片寬高的 20% 作為位移)
+        let offsetX = imgW * 0.2;
+        let offsetY = imgH * 0.2;
         
         // 判斷左右耳，調整「往外」的方向
         // 172 是右耳(畫面左側)，往外是減；397 是左耳(畫面右側)，往外是加
