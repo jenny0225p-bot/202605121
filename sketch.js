@@ -46,14 +46,14 @@ function gotHands(results) {
 
 function draw() {
   // 3. 設定畫布背景顏色為 e7c6ff
-  background('#c6dcffff');
+  background('rgb(254, 186, 186)');
 
   // 4. 置中上方顯示文字
   fill(0);
   noStroke();
   textAlign(CENTER, TOP);
   textSize(24);
-  text("414730977楊心ㄩˊ", width / 2, 30);
+  text("414730159彭宥蓁", width / 2, 30);
   textSize(18);
   text("影像辨識_耳環臉譜", width / 2, 80);
 
